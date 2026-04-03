@@ -1,24 +1,37 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useAuthContext } from '@/hooks/use-auth-context';
+import AuthProvider from '@/providers/auth-provider';
+import * as Notifications from 'expo-notifications';
+import { Redirect, Stack } from 'expo-router';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+export function RootNavigation() {
+  const { isLoggedIn, isLoading } = useAuthContext();
 
+  if (isLoading) return null;
+
+  if (!isLoggedIn) {
+    return <Redirect href={"/(auth)/login"}/>;
+  }
+  if (isLoggedIn) {
+    return <Redirect href={"/(tabs)/home"}/>;
+  }
+}
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+        <Stack>
+          <Stack.Screen name='(auth)' options={{ headerShown: false }}/>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+        </Stack>
+        <RootNavigation/>
+    </AuthProvider>
   );
 }
