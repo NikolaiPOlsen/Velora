@@ -34,9 +34,9 @@ Velora is built for repair shops, service technicians, and small businesses that
 2. **Set up environment variables**
    
    Create a `.env` file in the root of the project and add the following:
-   ```EXPO_PUBLIC_TRELLO_API_KEY=your_api_key```
-   ```EXPO_PUBLIC_TRELLO_TOKEN=your_token```
-   ```EXPO_PUBLIC_TRELLO_LIST_ID_ARBEID=your_list_id```
+   `EXPO_PUBLIC_TRELLO_API_KEY=your_api_key`
+   `EXPO_PUBLIC_TRELLO_TOKEN=your_token`
+   `EXPO_PUBLIC_TRELLO_LIST_ID_ARBEID=your_list_id`
 
 3. **Start the app**
 ```bash
