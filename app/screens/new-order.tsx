@@ -6,6 +6,7 @@ import { Device } from '@/services/Suppliers/types';
 import { useState } from 'react';
 import { Dimensions, FlatList, KeyboardAvoidingView, Platform, StyleSheet, TextInput, useColorScheme, Text, View, Image} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AddToCartButton } from '@/components/app-button';
 
 export default function RegisterCustomerScreen() {
     const colorScheme = useColorScheme();
@@ -13,10 +14,9 @@ export default function RegisterCustomerScreen() {
     const [customername, setCustomerName] = useState('');
     const [phonenumber, setPhonenumber] = useState('');
     const [phoneModel, setPhoneModel] = useState('');
-    const { fetchParts, fetchPartDetails, fetchPartPhotos, addToCart } = useShowSearchItems();
+    const { fetchParts, addToCart } = useShowSearchItems();
     const [parts, setParts] = useState<Device[]>([]);
-    const [details, setDetails] = useState(null);
-    const [photos, setPhotos] = useState([]);
+    const [quantities, setQuantities] = useState<Record<string, number>>({});
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
@@ -28,37 +28,44 @@ export default function RegisterCustomerScreen() {
 
                     <FlatList
                         data={parts}
-                        keyExtractor={(item) => item.Geraeteid.toString()}
+                        keyExtractor={(item) => item.Artikelnummer}
                         renderItem={({ item }) => (
-                            <View style={styles.partsList}>
-                                <Image source={{ uri: `data:image/jpeg;base64,${item.Photos?.[0] ?? ''}` }} style={{ width: 100, height: 100, marginBottom: 10 }} />
-                                <Text>{item.Name}</Text>
-                                <Text>{item.Price}</Text>
-                                <TextInput placeholder='Antall' style={[styles.quantityInput, { borderColor: themeColors.border, color: themeColors.text }]} keyboardType="numeric" />
-                                <AppButton label='Legg i handlekurv' onPress={async () => {
-                                    try {
-                                        await addToCart(item.Geraeteid, 1);
-                                        alert('Delen er lagt i handlekurven!');
-                                    } catch (error) {
-                                        alert('Det skjedde en feil ved legging i handlekurven.');
-                                    }
-                                }} />
+                            <View style={[styles.partsList, { borderColor: themeColors.border }]}>
+                                <Image source={{ uri: item.Artikelthumbnail }} style={{ width: width * 0.2, height: height * 0.27, marginBottom: 10 }} />
+                                <View style={{ flexDirection: 'column', marginBottom: 10 }}>
+                                    <Text style={[{ color: themeColors.text }]}>Brand: {item.Hersteller}</Text>
+                                    <Text style={[{ color: themeColors.text }]}>Type: {item.Artikelbezeichnung}</Text>
+                                </View>
+
+                            <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '20%' }}>
+                                    <Text style={[{ color: themeColors.text, fontWeight: 'bold', fontSize: 16 }]}>{(item.Bruttopreis * 1.25).toFixed(2)} kr</Text>
+                                    <TextInput placeholder='Antall' style={[styles.quantityInput, { borderColor: themeColors.border, color: themeColors.text }]} keyboardType="numeric" 
+                                        onChangeText={(val) => setQuantities(prev => ({ ...prev, [item.Artikelnummer]: Number(val) }))}
+                                        value={String(quantities[item.Artikelnummer] ?? 1)}/>
+                                </View>
+
+                                    <AddToCartButton label='Legg i handlekurv' onPress={async () => {
+                                        try {
+                                            await addToCart(item.Artikelnummer, quantities[item.Artikelnummer] ?? 1);
+                                            alert('Delen er lagt i handlekurven!');
+                                        } catch (error) {
+                                            alert('Det skjedde en feil ved legging i handlekurven.');
+                                        }
+                                    }} />
+                                    </View>
                             </View>
                         )}
                     />
 
                     <AppButton label='Søk etter deler' onPress={async () => {
-                        const results = await fetchParts(phoneModel);
-                        const partsWithDetails = await Promise.all(
-                            results.map(async (part) => {
-                                const [details, photos] = await Promise.all([
-                                    fetchPartDetails(part.Geraeteid),
-                                    fetchPartPhotos(part.Geraeteid),
-                                ]);
-                                return { ...part, details, photos };
-                            })
-                        );
-                        setParts(partsWithDetails);
+                        try {
+                            const results = await fetchParts(phoneModel);
+                            setParts(results);
+                        } catch (error) {
+                            alert('Noe gikk galt ved søk etter deler.');
+                            console.error(error);
+                        }
                     }} />
 
                 </ThemedView>
@@ -94,15 +101,13 @@ const styles = StyleSheet.create({
     },
     partsList: {
         width: width * 0.8,
-        maxWidth: 600,
+        maxWidth: width * 0.9,
         height: height * 0.3,
         borderWidth: 1,
-        borderColor: '#ccc',
         borderRadius: 10,
         padding: 10,
-        flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        marginBottom: 20,
     },
     quantityInput: {
         width: width * 0.2,
