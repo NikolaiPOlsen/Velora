@@ -7,20 +7,14 @@ export const aswoSupplier: PartsSupplier = {
             method: 'GET',
             headers: { "Content-Type": "application/json" },
         });
-        const partId = await response.json();
-        return partId;
+        const text = await response.text();
+        console.log("ASWO fetchParts:", text);
+        const data = JSON.parse(text);
+        return Object.values(data);
 },
     fetchPartDetails: async (partId: string) => {
         const key = process.env.EXPO_PUBLIC_ASWO_KEY;
         const response = await fetch(`https://aswoshop.aswo.com/service/customerapi/articledata?artnr=${partId}&format=json&apikey=${key}`, {
-            method: 'GET',
-            headers: { "Content-Type": "application/json" },
-        });
-        return response.json();
-    },
-    fetchPartPhotos: async (partId: string) => {
-        const key = process.env.EXPO_PUBLIC_ASWO_KEY;
-        const response = await fetch(`https://aswoshop.aswo.com/service/customerapi/pic4article?artnr=${partId}&format=json&apikey=${key}`, {
             method: 'GET',
             headers: { "Content-Type": "application/json" },
         });
