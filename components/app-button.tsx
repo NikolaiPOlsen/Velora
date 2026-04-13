@@ -1,5 +1,9 @@
+import { type ComponentProps } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, useColorScheme } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Colors } from '../constants/theme';
+
+type MaterialIconName = ComponentProps<typeof MaterialIcons>['name'];
 
 type Props = {
     onPress: () => void;
@@ -44,6 +48,29 @@ export function AddToCartButton({ onPress, label, icon, disabled }: Props) {
     )
 }
 
+type SearchButtonProps = {
+    onPress: () => void;
+    icon: MaterialIconName;
+    disabled?: boolean;
+}
+
+export function SearchButton({ onPress, icon, disabled }: SearchButtonProps) {
+        const colorScheme = useColorScheme();
+        const themeColors = Colors[colorScheme ?? 'light'];
+    return (
+        <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            style={({ pressed }) => [
+                styles.searchButton,
+                {backgroundColor: themeColors.primary},
+                (pressed || disabled) && {opacity: 0.5}
+            ]}>
+            <MaterialIcons name={icon} size={24} color={themeColors.background} />
+        </Pressable>
+    )
+}
+
 const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
     buttonText: {
@@ -51,14 +78,16 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     homeButton: {
-        height: height * 0.06,
-        width: width * 0.6,
-        borderRadius: 25,
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
-        maxWidth: 400,
-        marginBottom: 15,
+        width: width * 0.9,
+        height: height * 0.06,
+        gap: 10,
+        marginBottom: 8,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        maxWidth: 380,
     },
     addToCartButton: {
         height: height * 0.06,
@@ -69,6 +98,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         maxWidth: 200,
         marginBottom: 15,
+    },
+    searchButton: {
+        width: 48,
+        height: 48,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     buttonTextCart: {
         fontSize: 16,
