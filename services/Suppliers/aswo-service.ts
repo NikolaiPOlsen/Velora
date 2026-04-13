@@ -29,8 +29,8 @@ export const aswoSupplier: PartsSupplier = {
         const text = await response.text();
         console.log("ASWO Add to Cart Response:", text);
         const result = JSON.parse(text);
-        if (!result || !result.success) {
-            throw new Error(result?.message || "Failed to add item to cart");
+        if (!result || result.ERRORNUMBER !== 0) {
+            throw new Error(result?.ERRORMESSAGE || "Failed to add item to cart");
         }
     }
 };
