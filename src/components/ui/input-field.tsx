@@ -1,5 +1,5 @@
 import { TextInput, useColorScheme, StyleSheet, useWindowDimensions } from 'react-native';
-import { Colors } from '@/constants/theme'
+import { Colors } from '@/src/constants/theme'
 
 type inputProps = {
     name: string;
