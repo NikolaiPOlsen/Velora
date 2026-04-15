@@ -11,7 +11,7 @@ export const useCreateCard = () => {
         try {
             const newCard = await createTrelloCard({
                 name: `${customername} - ${phonenumber}`,
-                desc: `Problem: ${problem}\nPris: ${pris}`,
+                desc: `Problem: ${problem}\nPris: ${pris}\n Dato: ${new Date().toLocaleDateString()}`,
                 idList: listId,
             });
             console.log('Card created:', newCard);
