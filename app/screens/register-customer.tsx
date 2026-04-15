@@ -17,7 +17,7 @@ export default function RegisterCustomerScreen() {
     const [customername, setCustomerName] = useState('');
     const [phonenumber, setPhonenumber] = useState('');
     const [desc, setDesc] = useState('');
-    const [pris, setPris] = useState('');6
+    const [pris, setPris] = useState('');
 
     const handlePress = async (listId: string) => {
         const result = await handleCreateCard(listId, customername, phonenumber, desc, pris);
