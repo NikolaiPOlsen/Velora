@@ -1,121 +1,377 @@
-import AppButton from '@/components/app-button';
-import { ThemedView } from '@/components/themed-view';
+import AppButton, { AddToCartButton, SearchButton } from '@/components/app-button';
 import { Colors } from '@/constants/theme';
 import { useShowSearchItems } from '@/hooks/show-search-items';
 import { Device } from '@/services/Suppliers/types';
 import { useState } from 'react';
-import { Dimensions, FlatList, KeyboardAvoidingView, Platform, StyleSheet, TextInput, useColorScheme, Text, View, Image} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AddToCartButton } from '@/components/app-button';
+import {
+    FlatList,
+    KeyboardAvoidingView,
+    Platform,
+    StyleSheet,
+    TextInput,
+    useColorScheme,
+    useWindowDimensions,
+    Text,
+    View,
+    Image,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCreateCard } from '@/hooks/use-create-card';
+import { router } from 'expo-router';
 
 export default function RegisterCustomerScreen() {
     const colorScheme = useColorScheme();
     const themeColors = Colors[colorScheme ?? 'light'];
+    const insets = useSafeAreaInsets();
+    const { width, height } = useWindowDimensions();
+    const isPortrait = height > width;
+    const inputHeight = Math.round(height * 0.06);
     const [customername, setCustomerName] = useState('');
     const [phonenumber, setPhonenumber] = useState('');
     const [phoneModel, setPhoneModel] = useState('');
+    const [price, setPrice] = useState('');
     const { fetchParts, addToCart } = useShowSearchItems();
     const [parts, setParts] = useState<Device[]>([]);
     const [quantities, setQuantities] = useState<Record<string, number>>({});
+    const { handleCreateCard } = useCreateCard();
+    const [cartItems, setCartItems] = useState<{ item: Device; quantity: number }[]>([]);
+    const listId = process.env.EXPO_PUBLIC_TRELLO_LIST_ID_ORDRE || '';
+
+    const handlePress = async () => {
+        if (cartItems.length === 0) {
+            alert('Handlekurven er tom. Vennligst legg til deler før du registrerer kunden.');
+            return;
+        }
+
+        const partsDesc = cartItems
+            .map(c => `- x${c.quantity} ${c.item.Artikelbezeichnung} (#${c.item.Artikelnummer})`)
+            .join('\n');
+        const desc = `\n${partsDesc}\n`;
+
+        const result = await handleCreateCard(listId, customername, phonenumber, desc, price);
+        if (result) {
+            setCustomerName('');
+            setPhonenumber('');
+            setPrice('');
+            setCartItems([]);
+            router.replace('/home');
+        }
+    };
+
+    const handleAddAllToCart = async () => {
+        const selected = parts.filter(p => (quantities[p.Artikelnummer] ?? 0) > 0);
+            if (selected.length === 0) {
+                alert('Ingen deler valgt.');
+                return;
+            }
+        try {
+            for (const part of selected) {
+                await addToCart(part.Artikelnummer, quantities[part.Artikelnummer]);
+            }
+            setCartItems(selected.map(p => ({ item: p, quantity: quantities[p.Artikelnummer] })));
+            alert(`${selected.length} del(er) lagt i handlekurven!`);
+        }
+        catch (error) {
+            alert('Noe gikk galt ved å legge i handlekurven.');
+            console.error(error);
+        }
+    };
+
+
+    const handleSearch = async () => {
+        try {
+            const results = await fetchParts(phoneModel);
+            setParts(results);
+        } catch (error) {
+            alert('Noe gikk galt ved søk etter deler.');
+            console.error(error);
+        }
+    };
+
+    const renderPartCard = ({ item }: { item: Device }) => (
+        <View style={[styles.partCard, { backgroundColor: themeColors.background, borderColor: themeColors.border }]}>
+            <Image source={{ uri: item.Artikelthumbnail }} style={styles.partImage} resizeMode="contain" />
+            <View style={styles.partInfo}>
+                <Text style={[styles.partBrand, { color: themeColors.text }]}>{item.Hersteller}</Text>
+                <Text style={[styles.partName, { color: themeColors.icon }]}>{item.Artikelbezeichnung}</Text>
+                <Text style={[styles.partPrice, { color: themeColors.text }]}>
+                    {(item.Bruttopreis * 1.25).toFixed(2)} kr
+                </Text>
+            </View>
+            <View style={styles.partActions}>
+                <TextInput
+                    placeholder="0"
+                    placeholderTextColor={themeColors.icon}
+                    style={[styles.quantityInput, { borderColor: themeColors.border, color: themeColors.text, backgroundColor: themeColors.card }]}
+                    keyboardType="numeric"
+                    onChangeText={(val) => setQuantities((prev) => ({ ...prev, [item.Artikelnummer]: Number(val) }))}
+                    value={String(quantities[item.Artikelnummer] ?? 0)}
+                />
+            </View>
+        </View>
+    );
+
+    if (isPortrait) {
+        return (
+            <KeyboardAvoidingView
+                style={{ flex: 1, backgroundColor: themeColors.background }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            >
+                <FlatList
+                    data={parts}
+                    keyExtractor={(item) => item.Artikelnummer}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{
+                        paddingTop: insets.top + 28,
+                        paddingBottom: insets.bottom + 20,
+                        paddingHorizontal: insets.left + 20,
+                    }}
+                    ListHeaderComponent={
+                        <View>
+                            <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Ny kunde</Text>
+                            <Text style={[styles.sectionSubtitle, { color: themeColors.icon }]}>Fyll inn detaljer og velg deler</Text>
+
+                            <Text style={[styles.inputLabel, { color: themeColors.text }]}>Kundenavn</Text>
+                            <TextInput
+                                placeholder="Navn"
+                                placeholderTextColor={themeColors.icon}
+                                style={[styles.inputBox, styles.inputBoxPortrait, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                                value={customername}
+                                onChangeText={setCustomerName}
+                            />
+
+                            <Text style={[styles.inputLabel, { color: themeColors.text }]}>Telefonnummer</Text>
+                            <TextInput
+                                placeholder="Telefonnummer"
+                                placeholderTextColor={themeColors.icon}
+                                style={[styles.inputBox, styles.inputBoxPortrait, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                                value={phonenumber}
+                                onChangeText={setPhonenumber}
+                            />
+
+                            <Text style={[styles.inputLabel, { color: themeColors.text }]}>Telefonmodell</Text>
+                            <TextInput
+                                placeholder="Telefonmodell"
+                                placeholderTextColor={themeColors.icon}
+                                style={[styles.inputBox, styles.inputBoxPortrait, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                                value={phoneModel}
+                                onChangeText={setPhoneModel}
+                            />
+
+                            <AppButton label="Søk etter deler" onPress={handleSearch} />
+
+                            <Text style={[styles.inputLabel, { color: themeColors.text }]}>Pris</Text>
+                            <TextInput
+                                placeholder="Pris"
+                                placeholderTextColor={themeColors.icon}
+                                style={[styles.inputBox, styles.inputBoxPortrait, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                                value={price}
+                                onChangeText={setPrice}
+                            />
+
+                            {parts.length > 0 && (
+                                <Text style={[styles.sectionTitle, { color: themeColors.text, marginTop: 28, marginBottom: 12 }]}>
+                                    Søkeresultater - {parts.length} {parts.length === 1 ? 'del' : 'deler'} funnet
+                                </Text>
+                            )}
+                        </View>
+                    }
+                    ListEmptyComponent={null}
+                    renderItem={renderPartCard}
+                />
+            </KeyboardAvoidingView>
+        );
+    }
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: themeColors.background }}>
-            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={100}>
-                <ThemedView style={styles.container}>
-                    <TextInput placeholder='Navn' style={[styles.inputBox, { borderColor: themeColors.border, color: themeColors.text }]} value={customername} onChangeText={setCustomerName} />
-                    <TextInput placeholder='Telefonnummer' style={[styles.inputBox, { borderColor: themeColors.border, color: themeColors.text }]} value={phonenumber} onChangeText={setPhonenumber} keyboardType="numeric" />
-                    <TextInput placeholder='Telefon modell' style={[styles.inputBox, { borderColor: themeColors.border, color: themeColors.text }]} value={phoneModel} onChangeText={setPhoneModel} />
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+        >
+            <View style={{ flex: 1, flexDirection: 'row' }}>
 
-                    <FlatList
-                        data={parts}
-                        keyExtractor={(item) => item.Artikelnummer}
-                        renderItem={({ item }) => (
-                            <View style={[styles.partsList, { borderColor: themeColors.border }]}>
-                                <Image source={{ uri: item.Artikelthumbnail }} style={{ width: width * 0.2, height: height * 0.27, marginBottom: 10 }} />
-                                <View style={{ flexDirection: 'column', marginBottom: 10 }}>
-                                    <Text style={[{ color: themeColors.text }]}>Brand: {item.Hersteller}</Text>
-                                    <Text style={[{ color: themeColors.text }]}>Type: {item.Artikelbezeichnung}</Text>
-                                </View>
+                <View style={[
+                    styles.leftPanel,
+                    {
+                        backgroundColor: themeColors.background,
+                        paddingTop: insets.top + 28,
+                        paddingBottom: insets.bottom + 20,
+                        paddingLeft: insets.left + 28,
+                        paddingRight: 28,
+                    }
+                ]}>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Ny kunde</Text>
+                    <Text style={[styles.sectionSubtitle, { color: themeColors.icon }]}>Fyll inn detaljer og velg deler</Text>
 
-                            <View style={{ flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', width: '100%'}}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '20%' }}>
-                                    <Text style={[{ color: themeColors.text, fontWeight: 'bold', fontSize: 16 }]}>{(item.Bruttopreis * 1.25).toFixed(2)} kr</Text>
-                                    <TextInput placeholder='Antall' style={[styles.quantityInput, { borderColor: themeColors.border, color: themeColors.text }]} keyboardType="numeric" 
-                                        onChangeText={(val) => setQuantities(prev => ({ ...prev, [item.Artikelnummer]: Number(val) }))}
-                                        value={String(quantities[item.Artikelnummer] ?? 1)}/>
-                                </View>
-
-                                    <AddToCartButton label='Legg i handlekurv' onPress={async () => {
-                                        try {
-                                            await addToCart(item.Artikelnummer, quantities[item.Artikelnummer] ?? 1);
-                                            alert('Delen er lagt i handlekurven!');
-                                        } catch (error) {
-                                            alert('Det skjedde en feil ved legging i handlekurven.');
-                                        }
-                                    }} />
-                                    </View>
-                            </View>
-                        )}
+                    <Text style={[styles.inputLabel, { color: themeColors.text }]}>Kundenavn</Text>
+                    <TextInput
+                        placeholder="Navn"
+                        placeholderTextColor={themeColors.icon}
+                        style={[styles.inputBox, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                        value={customername}
+                        onChangeText={setCustomerName}
                     />
 
-                    <AppButton label='Søk etter deler' onPress={async () => {
-                        try {
-                            const results = await fetchParts(phoneModel);
-                            setParts(results);
-                        } catch (error) {
-                            alert('Noe gikk galt ved søk etter deler.');
-                            console.error(error);
-                        }
-                    }} />
+                    <Text style={[styles.inputLabel, { color: themeColors.text }]}>Telefonnummer</Text>
+                    <TextInput
+                        placeholder="Telefonnummer"
+                        placeholderTextColor={themeColors.icon}
+                        style={[styles.inputBox, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                        value={phonenumber}
+                        onChangeText={setPhonenumber}
+                        keyboardType="numeric"
+                    />
 
-                </ThemedView>
-            </KeyboardAvoidingView>
-        </SafeAreaView>
-    )
-};
+                    <Text style={[styles.inputLabel, { color: themeColors.text }]}>Telefonmodell</Text>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                        <TextInput
+                            placeholder="Telefonmodell"
+                            placeholderTextColor={themeColors.icon}
+                            style={[styles.inputBox, { flex: 1, backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                            value={phoneModel}
+                            onChangeText={setPhoneModel}
+                        />
+                        <SearchButton icon="search" onPress={handleSearch} />
+                    </View>
 
-const { width, height } = Dimensions.get('window');
+                    <Text style={[styles.inputLabel, { color: themeColors.text }]}>Pris</Text>
+                        <TextInput
+                            placeholder="Pris"
+                            placeholderTextColor={themeColors.icon}
+                            style={[styles.inputBox, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+                            value={price}
+                            onChangeText={setPrice}
+                        />
+
+                        <AppButton label="Registrer kunde" onPress={handlePress} />
+                </View>
+
+                <View style={{ width: 1, backgroundColor: themeColors.card }} />
+
+                <View style={[
+                    styles.rightPanel,
+                    {
+                        backgroundColor: themeColors.card,
+                        paddingTop: insets.top + 28,
+                        paddingBottom: insets.bottom + 20,
+                        paddingRight: insets.right + 28,
+                        paddingLeft: 28,
+                    }
+                ]}>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Søkeresultater - {parts.length} {parts.length === 1 ? 'del' : 'deler'} funnet</Text>
+
+                    {parts.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={[styles.emptyText, { color: themeColors.icon }]}>
+                                Søk etter deler for å se resultater her
+                            </Text>
+                        </View>
+                    ) : (
+                        <FlatList
+                            data={parts}
+                            keyExtractor={(item) => item.Artikelnummer}
+                            showsVerticalScrollIndicator={false}
+                            contentContainerStyle={{ paddingBottom: 20 }}
+                            renderItem={renderPartCard}
+                        />
+                        
+                    )}
+                    <AddToCartButton 
+                    label="Legg i handlekurv"
+                    onPress={handleAddAllToCart}
+                />
+                </View>
+
+            </View>
+        </KeyboardAvoidingView>
+    );
+}
+
 const styles = StyleSheet.create({
-    container: {
+    leftPanel: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+    },
+    rightPanel: {
+        flex: 1,
+    },
+    sectionTitle: {
+        fontSize: 26,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    sectionSubtitle: {
+        fontSize: 15,
+        marginBottom: 28,
+    },
+    inputLabel: {
+        fontSize: 13,
+        fontWeight: '600',
+        marginBottom: 6,
+        marginLeft: 2,
     },
     inputBox: {
-        width: width * 0.6,
-        height: height * 0.06,
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        borderRadius: 20,
-        maxWidth: 400,
+        marginBottom: 18,
+        paddingHorizontal: 14,
+        borderRadius: 12,
+        fontSize: 16,
+        maxWidth: 380,
     },
-    inputBoxMultiline: {
-        width: width * 0.6,
-        height: height * 0.15,
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        borderRadius: 20,
-        maxWidth: 400,
+    inputBoxPortrait: {
+        maxWidth: undefined,
+        width: '100%',
     },
-    partsList: {
-        width: width * 0.8,
-        maxWidth: width * 0.9,
-        height: height * 0.3,
-        borderWidth: 1,
-        borderRadius: 10,
-        padding: 10,
-        flexWrap: 'wrap',
-        marginBottom: 20,
+    emptyState: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    emptyText: {
+        fontSize: 15,
+        textAlign: 'center',
+        maxWidth: 260,
+        lineHeight: 22,
+    },
+    partCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: 14,
+        padding: 14,
+        marginBottom: 12,
+        gap: 14,
+    },
+    partImage: {
+        width: 64,
+        height: 80,
+        borderRadius: 8,
+    },
+    partInfo: {
+        flex: 1,
+        gap: 4,
+    },
+    partBrand: {
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    partName: {
+        fontSize: 13,
+    },
+    partPrice: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginTop: 4,
+    },
+    partActions: {
+        alignItems: 'center',
+        gap: 10,
     },
     quantityInput: {
-        width: width * 0.2,
-        height: height * 0.06,
+        width: 56,
+        height: 42,
         borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10,
-        borderRadius: 20,
-        maxWidth: 100,
-    }
+        paddingHorizontal: 8,
+        borderRadius: 10,
+        textAlign: 'center',
+        fontSize: 16,
+    },
 });
