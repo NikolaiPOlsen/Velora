@@ -1,7 +1,7 @@
-import AppButton, { AddToCartButton, SearchButton } from '@/components/app-button';
-import { Colors } from '@/constants/theme';
+import AppButton, { AddToCartButton, SearchButton } from '@/src/components/ui/app-button';
+import { Colors } from '@/src/constants/theme';
 import { useShowSearchItems } from '@/hooks/show-search-items';
-import { Device } from '@/services/Suppliers/types';
+import { Device } from '@/src/services/Suppliers/types';
 import { useState } from 'react';
 import {
     FlatList,

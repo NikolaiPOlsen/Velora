@@ -1,6 +1,6 @@
-import AppButton from '@/components/app-button';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
+import AppButton from '@/src/components/ui/app-button';
+import { ThemedView } from '@/src/components/ui/themed-view';
+import { Colors } from '@/src/constants/theme';
 import { useCreateCard } from '@/hooks/use-create-card';
 import { router } from 'expo-router';
 import { useState } from 'react';

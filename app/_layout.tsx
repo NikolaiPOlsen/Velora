@@ -1,6 +1,6 @@
-import { Colors } from '@/constants/theme';
-import { useAuthContext } from '@/hooks/use-auth-context';
-import AuthProvider from '@/providers/auth-provider';
+import { Colors } from '@/src/constants/theme';
+import { useAuthContext } from '@/src/hooks/use-auth-context';
+import AuthProvider from '@/src/providers/auth-provider';
 import { Redirect, Stack } from 'expo-router';
 import { useColorScheme } from 'react-native';
 

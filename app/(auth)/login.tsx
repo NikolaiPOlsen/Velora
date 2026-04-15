@@ -1,7 +1,7 @@
 import AppButton from '@/components/app-button';
 import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { supabase } from '@/utils/supabase';
+import { Colors } from '@/src/constants/theme';
+import { supabase } from '@/src/utils/supabase';
 import { useState } from 'react';
 import { Alert, Dimensions, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

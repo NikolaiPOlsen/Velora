@@ -1,6 +1,6 @@
-import AppButton from '@/components/app-button';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
+import AppButton from '@/src/components/ui/app-button';
+import { ThemedView } from '@/src/components/ui/themed-view';
+import { Colors } from '@/src/constants/theme';
 import * as expo from 'expo-router';
 import { Dimensions, StyleSheet, useColorScheme } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

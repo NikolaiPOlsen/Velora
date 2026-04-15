@@ -1,4 +1,4 @@
-import { Colors } from '@/constants/theme';
+import { Colors } from '@/src/constants/theme';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useColorScheme } from 'react-native';
