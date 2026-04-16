@@ -1,5 +1,5 @@
 import { Dimensions, Pressable, StyleSheet, Text, useColorScheme, Animated, View, LayoutAnimation, Platform, UIManager } from 'react-native';
-import { Colors } from '../constants/theme';
+import { Colors } from '@/src/constants/theme';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { useRef, useState } from 'react';
 

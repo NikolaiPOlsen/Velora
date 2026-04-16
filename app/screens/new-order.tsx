@@ -1,6 +1,6 @@
 import AppButton, { AddToCartButton, SearchButton } from '@/src/components/ui/app-button';
 import { Colors } from '@/src/constants/theme';
-import { useShowSearchItems } from '@/hooks/show-search-items';
+import { useShowSearchItems } from '@/src/hooks/show-search-items';
 import { Device } from '@/src/services/Suppliers/types';
 import { useState } from 'react';
 import {
@@ -16,7 +16,7 @@ import {
     Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCreateCard } from '@/hooks/use-create-card';
+import { useCreateCard } from '@/src/hooks/use-create-card';
 import { router } from 'expo-router';
 
 export default function RegisterCustomerScreen() {

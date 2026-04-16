@@ -1,7 +1,7 @@
 import AppButton from '@/src/components/ui/app-button';
 import { ThemedView } from '@/src/components/ui/themed-view';
 import { Colors } from '@/src/constants/theme';
-import { useCreateCard } from '@/hooks/use-create-card';
+import { useCreateCard } from '@/src/hooks/use-create-card';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useWindowDimensions, KeyboardAvoidingView, Platform, StyleSheet, TextInput, useColorScheme, View, Text } from 'react-native';

@@ -1,4 +1,4 @@
-import { activeSupplier } from "@/services/Suppliers";
+import { activeSupplier } from "@/src/services/Suppliers";
 
 export const useShowSearchItems = () => {
     const fetchParts = async (query: string) => {

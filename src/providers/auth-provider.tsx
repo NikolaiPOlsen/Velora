@@ -1,4 +1,4 @@
-import { AuthContext } from '@/hooks/use-auth-context'
+import { AuthContext } from '@/src/hooks/use-auth-context'
 import { supabase } from '@/src/utils/supabase'
 import { PropsWithChildren, useEffect, useState } from 'react'
 

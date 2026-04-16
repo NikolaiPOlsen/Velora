@@ -1,5 +1,5 @@
-import AppButton from '@/components/app-button';
-import { ThemedView } from '@/components/themed-view';
+import AppButton from '@/src/components/ui/app-button';
+import { ThemedView } from '@/src/components/ui/themed-view';
 import { Colors } from '@/src/constants/theme';
 import { supabase } from '@/src/utils/supabase';
 import { useState } from 'react';

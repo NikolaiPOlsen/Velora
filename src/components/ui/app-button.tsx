@@ -1,7 +1,7 @@
 import { type ComponentProps } from 'react';
 import { Dimensions, Pressable, StyleSheet, Text, useColorScheme } from 'react-native';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Colors } from '../constants/theme';
+import { Colors } from '@/src/constants/theme';
 
 type MaterialIconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -19,6 +19,7 @@ export default function AppButton({ onPress, label, icon, disabled }: Props) {
         <Pressable
             onPress={onPress}
             disabled={disabled}
+            accessibilityRole="button"
             style={({ pressed }) => [
                 styles.homeButton,
                 {backgroundColor: themeColors.primary},
