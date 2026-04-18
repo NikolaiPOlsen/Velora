@@ -7,7 +7,7 @@ type inputProps = {
     onChange: (text: string) => void;
 }
 
-export function inputField({ name, value, onChange }: inputProps) {
+export function InputField({ name, value, onChange }: inputProps) {
     const colorScheme = useColorScheme();
     const themeColors = Colors[colorScheme ?? 'light'];
 
@@ -26,6 +26,26 @@ export function inputField({ name, value, onChange }: inputProps) {
     )
 }
 
+export function PasswordField({ name, value, onChange }: inputProps) {
+    const colorScheme = useColorScheme();
+    const themeColors = Colors[colorScheme ?? 'light'];
+
+    const { width, height } = useWindowDimensions();
+
+    const inputHeight = Math.round(height * 0.06);
+
+    return (
+        <TextInput
+            placeholder={name}
+            placeholderTextColor={themeColors.icon}
+            style={[styles.inputBox, styles.inputBoxPortrait, { backgroundColor: themeColors.card, color: themeColors.text, height: inputHeight }]}
+            value={value}
+            onChangeText={onChange}
+            secureTextEntry
+        />
+    )
+}
+
 const styles = StyleSheet.create({
     inputBox: {
         marginBottom: 18,
@@ -36,6 +56,6 @@ const styles = StyleSheet.create({
     },
     inputBoxPortrait: {
         maxWidth: undefined,
-        width: '100%',
+        width: '90%',
     }
 });
