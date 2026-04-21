@@ -1,36 +1,26 @@
-import { PartsSupplier } from './types';
+import { supabase } from '@/src/utils/supabase';
+import { PartsSupplier } from '../../../supabase/functions/fetch-parts/types';
 
 export const aswoSupplier: PartsSupplier = {
     fetchParts: async (query: string) => {
-        const key = process.env.EXPO_PUBLIC_ASWO_KEY;
-        const response = await fetch(`https://aswoshop.aswo.com/service/customerapi/articlesearch?articlesearchkeywords=${query}&format=json&apikey=${key}`, {
-            method: 'GET',
-            headers: { "Content-Type": "application/json" },
+        const { data, error } = await supabase.functions.invoke('fetch-parts', {
+            body: { action: 'fetchParts', query },
         });
-        const text = await response.text();
-        console.log("ASWO fetchParts:", text);
-        const data = JSON.parse(text);
-        return Object.values(data);
-},
+        if (error) throw error;
+        return data;
+    },
     fetchPartDetails: async (partId: string) => {
-        const key = process.env.EXPO_PUBLIC_ASWO_KEY;
-        const response = await fetch(`https://aswoshop.aswo.com/service/customerapi/articledata?artnr=${partId}&format=json&apikey=${key}`, {
-            method: 'GET',
-            headers: { "Content-Type": "application/json" },
+        const { data, error } = await supabase.functions.invoke('fetch-parts', {
+            body: { action: 'fetchPartDetails', partId },
         });
-        return response.json();
+        if (error) throw error;
+        return data;
     },
     addToCart: async (partId: string, quantity: number) => {
-        const key = process.env.EXPO_PUBLIC_ASWO_KEY;
-        const response = await fetch(`https://aswoshop.aswo.com/service/customerapi/shoppingbasketput?artnr=${partId}&quantity=${quantity}&format=json&apikey=${key}`, {
-            method: 'POST',
-            headers: { "Content-Type": "application/json" },
+        const { data, error } = await supabase.functions.invoke('fetch-parts', {
+            body: { action: 'addToCart', partId, quantity },
         });
-        const text = await response.text();
-        console.log("ASWO Add to Cart Response:", text);
-        const result = JSON.parse(text);
-        if (!result || result.ERRORNUMBER !== 0) {
-            throw new Error(result?.ERRORMESSAGE || "Failed to add item to cart");
-        }
-    }
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+    },
 };
