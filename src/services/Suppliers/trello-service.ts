@@ -1,16 +1,15 @@
-export const createTrelloCard = async ({ idList, name, desc }: { idList: string, name: string, desc: string }) => {
-    const key = process.env.EXPO_PUBLIC_TRELLO_KEY;
-    const token = process.env.EXPO_PUBLIC_TRELLO_TOKEN;
-    
-    const response = await fetch(`https://api.trello.com/1/cards?idList=${idList}&name=${encodeURIComponent(name)}&desc=${encodeURIComponent(desc)}`, {
-        method: 'POST',
-        headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `OAuth oauth_consumer_key="${key}", oauth_token="${token}"`
-        },
-        body: JSON.stringify({ idList: idList, name: name, desc: desc })
-    }
-);
+import { supabase } from '@/src/utils/supabase';
 
-return await response.json();
+export const createTrelloCard = async ({ idList, name, desc }: { idList: string; name: string; desc: string }) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    console.log('Session token preview:', session?.access_token?.substring(0, 30));
+    const { data, error } = await supabase.functions.invoke('create-trello-card', {
+        body: { idList, name, desc },
+    });
+    if (error) {
+        console.error('Supabase function error:', JSON.stringify(error));
+        throw error;
+    }
+    if (data?.error) throw new Error(data.error);
+    return data;
 };
