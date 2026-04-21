@@ -1,5 +1,5 @@
-import { PartsSupplier } from './types';
-import { OperationResult } from './types';
+import { PartsSupplier } from '../../../supabase/functions/fetch-parts/types';
+import { OperationResult } from '../../../supabase/functions/fetch-parts/types';
 
 export const mobilepartsSupplier: PartsSupplier = {
     fetchParts: async (query: string) => {
